@@ -16,4 +16,11 @@ response = client.models.generate_content(
     contents="Why is Boot.dev such a great place to learn backend development? Use one paragraph maximum.",
 )
 
-print(response.text)
+if response.usage_metadata is not None:
+    prompt_tokens = response.usage_metadata.prompt_token_count
+    response_tokens = response.usage_metadata.candidates_token_count
+    print(f"Prompt tokens: {prompt_tokens}")
+    print(f"Response tokens: {response_tokens}")
+    print(response.text)
+else:
+    raise RuntimeError("Usage metadata is missing")
