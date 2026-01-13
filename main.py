@@ -36,6 +36,9 @@ if response.usage_metadata is not None:
         print(f"User prompt: {args.user_prompt}")
         print(f"Prompt tokens: {prompt_tokens}")
         print(f"Response tokens: {response_tokens}")
+    if response.function_calls:
+        for function_call in response.function_calls:
+            print(f"Calling function: {function_call.name}({function_call.args})")
     print(response.text)
 else:
     raise RuntimeError("Usage metadata is missing")
