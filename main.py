@@ -1,11 +1,12 @@
 import argparse
 import os
+from string import printable
 
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
-from functions.call_function import available_functions
+from functions.call_function import available_functions, call_function
 from prompts import system_prompt
 
 load_dotenv()
@@ -32,13 +33,23 @@ response = client.models.generate_content(
 if response.usage_metadata is not None:
     prompt_tokens = response.usage_metadata.prompt_token_count
     response_tokens = response.usage_metadata.candidates_token_count
+    function_call_results = []
+
     if args.verbose:
         print(f"User prompt: {args.user_prompt}")
         print(f"Prompt tokens: {prompt_tokens}")
         print(f"Response tokens: {response_tokens}")
     if response.function_calls:
         for function_call in response.function_calls:
-            print(f"Calling function: {function_call.name}({function_call.args})")
-    print(response.text)
+            function_call_result = call_function(function_call)
+            if not function_call_result.parts:
+                raise Exception("Function call result is None")
+            if function_call_result.parts[0].function_response is None:
+                raise Exception("Function call result text is None")
+            if function_call_result.parts[0].function_response.response is None:
+                raise Exception("Function call result response is None")
+            function_call_results.append(function_call_result.parts[0])
+            if args.verbose:
+                print(f"-> {function_call_result.parts[0].function_response.response}")
 else:
     raise RuntimeError("Usage metadata is missing")
